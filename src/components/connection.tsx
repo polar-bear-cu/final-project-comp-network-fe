@@ -7,7 +7,7 @@ const ConnectionCheck = () => {
   useEffect(() => {
     async function checkConnection() {
       try {
-        const response = await fetch(`${BASE_URL}/`);
+        const response = await fetch(`${BASE_URL}/v1/connection`);
         if (response.ok) {
           setHaveConnected(true);
         }

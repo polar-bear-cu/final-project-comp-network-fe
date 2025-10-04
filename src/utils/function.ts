@@ -17,6 +17,14 @@ export function checkFormValidation(
       message: "Username must be at least 3 characters.",
     };
   }
+  if (!/^[a-zA-Z0-9-_]+$/.test(data.username)) {
+    return {
+      pass: false,
+      field: "username",
+      message:
+        "Username must contain only English letters, numbers, hyphens or underscore.",
+    };
+  }
   if (!data.password) {
     return {
       pass: false,

@@ -6,7 +6,6 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import LandingPage from "./pages/LandingPage";
 import ChatPage from "./pages/ChatPage";
-import ConnectionCheck from "./components/connection";
 
 const router = createBrowserRouter([
   {
@@ -29,7 +28,6 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ConnectionCheck />
     <RouterProvider router={router} />
   </StrictMode>
 );

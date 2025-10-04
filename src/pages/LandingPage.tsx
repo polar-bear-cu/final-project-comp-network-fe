@@ -1,3 +1,4 @@
+import ConnectionCheck from "@/components/connection";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 
@@ -9,6 +10,7 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-primary to-secondary flex justify-center items-center">
+      <ConnectionCheck />
       <main className="flex flex-col justify-center items-center gap-16 p-4">
         <div className="flex flex-col items-center text-white font-bold gap-4">
           <h1 className="text-6xl text-primary-foreground drop-shadow-lg">
