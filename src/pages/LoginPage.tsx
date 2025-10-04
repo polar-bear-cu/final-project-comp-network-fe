@@ -1,5 +1,7 @@
-import type { FormDataInterface, FormResultInterface } from "@/interface/form";
+import type { FormDataInterface, FormErrorField } from "@/interface/form";
 import { BASE_URL } from "@/utils/api";
+import { checkFormValidation } from "@/utils/function";
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
 
@@ -10,26 +12,13 @@ const LoginPage = () => {
   });
   const [isErrorSending, setErrorSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
-  function checkFormValidation(data: FormDataInterface): FormResultInterface {
-    if (data.username.length < 3) {
-      return {
-        pass: false,
-        message: "Username must be at least 3 characters.",
-      };
-    } else if (data.password.length < 6) {
-      return {
-        pass: false,
-        message: "Password must be at least 6 characters.",
-      };
-    }
-    return { pass: true, message: "" };
-  }
+  const [errorField, setErrorField] = useState<FormErrorField>();
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const validForm = checkFormValidation(formData);
-    if (validForm.pass) {
+    const isValid = checkFormValidation(formData);
+    if (isValid.pass) {
       const response = await fetch(`${BASE_URL}/login`, {
         method: "POST",
         headers: {
@@ -40,22 +29,18 @@ const LoginPage = () => {
       if (!response.ok) {
         setErrorSending(true);
         setErrorMessage("Failed to login. Please try again.");
+        setErrorField(null);
         return;
       } else {
-        const data = await response.json();
-        if (data && data.success) {
-          setErrorSending(false);
-          window.location.href = "/chat";
-        } else {
-          setErrorSending(true);
-          setErrorMessage(data.message);
-          return;
-        }
+        setErrorSending(false);
+        window.location.href = "/chat";
+        setErrorField(null);
         setFormData({ username: "", password: "" });
       }
     } else {
       setErrorSending(true);
-      setErrorMessage(validForm.message);
+      setErrorMessage(isValid.message);
+      setErrorField(isValid.field);
     }
   }
 
@@ -80,12 +65,19 @@ const LoginPage = () => {
               value={formData.username}
               onChange={(e) => {
                 setErrorSending(false);
+                if (errorField == "username") {
+                  setErrorField(null);
+                }
                 e.preventDefault();
                 setFormData({ ...formData, username: e.target.value });
               }}
               type="text"
               placeholder="Enter your username"
-              className="border-2 border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary transition"
+              className={`border-2 ${
+                errorField == "username"
+                  ? "border-destructive"
+                  : "border-gray-300"
+              } rounded-md px-3 py-2 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary transition`}
             />
           </div>
 
@@ -97,18 +89,32 @@ const LoginPage = () => {
             >
               Password
             </label>
-            <input
-              id="password"
-              value={formData.password}
-              onChange={(e) => {
-                setErrorSending(false);
-                e.preventDefault();
-                setFormData({ ...formData, password: e.target.value });
-              }}
-              type="password"
-              placeholder="Enter your password"
-              className="border-2 border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary transition"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                value={formData.password}
+                onChange={(e) => {
+                  setErrorSending(false);
+                  if (errorField === "password") setErrorField(null);
+                  e.preventDefault();
+                  setFormData({ ...formData, password: e.target.value });
+                }}
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                className={`w-full border-2 ${
+                  errorField === "password"
+                    ? "border-destructive"
+                    : "border-gray-300"
+                } rounded-md px-3 py-2 pr-10 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary transition`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute cursor-pointer inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-primary"
+              >
+                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+              </button>
+            </div>
           </div>
 
           {isErrorSending && (

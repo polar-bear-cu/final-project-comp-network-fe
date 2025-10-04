@@ -5,5 +5,8 @@ export interface FormDataInterface {
 
 export interface FormResultInterface {
   pass: boolean;
+  field: FormErrorField;
   message: string;
 }
+
+export type FormErrorField = "username" | "password" | null;
