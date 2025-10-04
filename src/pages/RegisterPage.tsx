@@ -3,7 +3,7 @@ import HomeButton from "@/components/homeButton";
 import type { FormDataInterface, FormErrorField } from "@/interface/form";
 import { BASE_URL, type ResponseInterface } from "@/utils/api";
 import { checkFormValidation } from "@/utils/function";
-import { Eye, EyeOff, House, Loader } from "lucide-react";
+import { Eye, EyeOff, Loader } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 

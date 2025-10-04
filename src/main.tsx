@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import LandingPage from "./pages/LandingPage";
 import ChatPage from "./pages/ChatPage";
+import { UserProvider } from "./context/userContext";
 
 const router = createBrowserRouter([
   {
@@ -22,7 +23,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/chat",
-    element: <ChatPage />,
+    element: (
+      <UserProvider>
+        <ChatPage />
+      </UserProvider>
+    ),
   },
 ]);
 
