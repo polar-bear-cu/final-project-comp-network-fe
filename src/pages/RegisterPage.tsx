@@ -1,5 +1,6 @@
 import ConnectionCheck from "@/components/connection";
 import HomeButton from "@/components/homeButton";
+import { Button } from "@/components/ui/button";
 import type { FormDataInterface, FormErrorField } from "@/interface/form";
 import { BASE_URL, type ResponseInterface } from "@/utils/api";
 import { checkFormValidation } from "@/utils/function";
@@ -142,14 +143,15 @@ const RegisterPage = () => {
           )}
 
           {/* Button */}
-          <button
-            type="submit"
+          <Button
             disabled={isLoading}
-            className="mt-4 bg-primary text-white py-2 rounded-md text-lg font-semibold hover:bg-primary/90 transition active:scale-95 flex justify-center items-center"
+            className={`mt-4 bg-primary text-white py-2 rounded-md text-lg font-semibold hover:bg-primary/90 transition active:scale-95 flex justify-center items-center ${
+              isLoading ? "" : "cursor-pointer"
+            }`}
           >
             {isLoading && <Loader size={20} className="animate-spin mr-2" />}
             {isLoading ? "Creating..." : "Create Account"}
-          </button>
+          </Button>
         </form>
 
         <p className="text-center text-sm text-gray-500 mt-6">
