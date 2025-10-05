@@ -1,5 +1,4 @@
 import ConnectionCheck from "@/components/connection";
-import HomeButton from "@/components/homeButton";
 import { Button } from "@/components/ui/button";
 import type { FormDataInterface, FormErrorField } from "@/interface/form";
 import { BASE_URL, type ResponseInterface } from "@/utils/api";
@@ -167,7 +166,6 @@ const LoginPage = () => {
           </button>
         </p>
       </main>
-      <HomeButton />
     </div>
   );
 };

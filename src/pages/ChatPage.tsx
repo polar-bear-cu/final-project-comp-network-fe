@@ -57,8 +57,24 @@ const ChatPage = () => {
   }
 
   const handleLogout = async () => {
-    alert("ออกจากระบบแล้วนะ");
-    setOpenLogoutPopup(false);
+    try {
+      const res = await fetch(`${BASE_URL}/v1/user/logout`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      const data: ResponseInterface<UserInterface> = await res.json();
+
+      if (data.success) {
+        setUser(null);
+        setOpenLogoutPopup(false);
+        window.location.href = "/login";
+      } else {
+        console.error("Logout failed:", data.message);
+      }
+    } catch (err) {
+      console.error("Error during logout:", err);
+    }
   };
 
   const LogoutPopup = () => (
