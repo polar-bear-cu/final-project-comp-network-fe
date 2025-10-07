@@ -19,6 +19,7 @@ const ChatPage = () => {
   const [openLogoutPopup, setOpenLogoutPopup] = useState(false);
   const [chatUsers, setChatUsers] = useState<ChatUserInterface[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessageInterface[]>([]);
+  const [messageInput, setMessageInput] = useState<string>("");
   const [activeChatId, setActiveChatId] = useState<string>("");
   const [darkMode, setDarkMode] = useState(false);
 
@@ -43,21 +44,6 @@ const ChatPage = () => {
             lastMessage: `This is message ${i + 1}`,
           }));
           setChatUsers(sampleChatUsers);
-
-          const sampleChatMessages: ChatMessageInterface[] = Array.from({
-            length: 20,
-          }).map((_, i) => {
-            const sender =
-              Math.random() < 0.5 ? "User-1" : data.message.username;
-            return {
-              id: `msg-${i}`,
-              username: sender,
-              isMe: sender === data.message.username,
-              message: `Sample message ${i + 1}`,
-              datetime: new Date(),
-            };
-          });
-          setChatMessages(sampleChatMessages);
         } else {
           navigate("/login");
         }
@@ -98,6 +84,21 @@ const ChatPage = () => {
     } catch (err) {
       console.error("Error during logout:", err);
     }
+  };
+
+  const handleSendMessage = async () => {
+    if (!messageInput.trim()) return;
+
+    const newMessage: ChatMessageInterface = {
+      id: crypto.randomUUID(),
+      username: user?.username || "",
+      message: messageInput.trim(),
+      datetime: new Date(),
+      isMe: true,
+    };
+
+    setChatMessages((prev) => [...prev, newMessage]);
+    setMessageInput("");
   };
 
   const LogoutPopup = () => (
@@ -174,7 +175,7 @@ const ChatPage = () => {
             ))}
           </ul>
 
-          <div className="bg-card text-primary dark:text-white p-3 shadow-md z-10 relative flex justify-between items-center gap-4">
+          <div className="w-full h-20 bg-card text-primary dark:text-white p-3 shadow-md z-10 relative flex justify-between items-center gap-4">
             <div>
               <p className="text-md font-medium">Logged in as:</p>
               <p className="text-lg font-bold">{user.username ?? "Unknown"}</p>
@@ -205,17 +206,36 @@ const ChatPage = () => {
               <h2 className="sticky top-0 bg-card text-primary dark:text-white text-2xl font-bold p-3 z-20 mb-2">
                 {activeUser.username}
               </h2>
-              <ul className="flex-1 overflow-y-auto p-4 space-y-4">
-                {chatMessages.map((chat) => (
-                  <ChatMessage
-                    key={chat.id}
-                    username={chat.username}
-                    isMe={chat.username === user.username}
-                    message={chat.message}
-                    datetime={chat.datetime}
-                  />
-                ))}
-              </ul>
+              {chatMessages.length > 0 ? (
+                <ul className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {chatMessages.map((chat) => (
+                    <ChatMessage
+                      key={chat.id}
+                      username={chat.username}
+                      isMe={chat.username === user.username}
+                      message={chat.message}
+                      datetime={chat.datetime}
+                    />
+                  ))}
+                </ul>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <h1 className="text-6xl font-bold text-primary dark:text-foreground">
+                    SockeTalk
+                  </h1>
+                </div>
+              )}
+              <div className="w-full h-20 sticky bottom-0 bg-card text-primary dark:text-white p-3 flex gap-4 items-center">
+                <input
+                  type="text"
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                  className="border rounded-full w-full px-4 py-2 outline-none bg-background dark:bg-card text-foreground dark:text-white"
+                  placeholder="Type a message..."
+                />
+                <Button onClick={handleSendMessage}>Submit</Button>
+              </div>
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center">
