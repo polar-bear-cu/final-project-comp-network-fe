@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useUser } from "@/context/userContext";
 import type { UserInterface } from "@/interface/user";
 import { BASE_URL, type ResponseInterface } from "@/utils/api";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { X, Moon, Sun } from "lucide-react";
 import ChatUserContainer, {
@@ -22,6 +22,13 @@ const ChatPage = () => {
   const [messageInput, setMessageInput] = useState<string>("");
   const [activeChatId, setActiveChatId] = useState<string>("");
   const [darkMode, setDarkMode] = useState(false);
+
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatMessages]);
 
   useEffect(() => {
     async function loadUser() {
@@ -217,6 +224,7 @@ const ChatPage = () => {
                       datetime={chat.datetime}
                     />
                   ))}
+                  <div ref={messagesEndRef} />
                 </ul>
               ) : (
                 <div className="flex-1 flex items-center justify-center">
@@ -225,16 +233,26 @@ const ChatPage = () => {
                   </h1>
                 </div>
               )}
-              <div className="w-full h-20 sticky bottom-0 bg-card text-primary dark:text-white p-3 flex gap-4 items-center">
-                <input
-                  type="text"
+              <div className="w-full h-20 bg-card text-primary dark:text-white p-3 flex gap-4 items-center">
+                <textarea
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                  className="border rounded-full w-full px-4 py-2 outline-none bg-background dark:bg-card text-foreground dark:text-white"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && e.ctrlKey) {
+                      e.preventDefault();
+                      setMessageInput((prev) => prev + "\n");
+                    } else if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
                   placeholder="Type a message..."
+                  className="w-full max-h-32 min-h-[48px] border rounded-full px-4 py-2 outline-none bg-background dark:bg-card text-foreground dark:text-white resize-none overflow-y-auto"
+                  rows={1}
                 />
-                <Button onClick={handleSendMessage}>Submit</Button>
+                <Button onClick={handleSendMessage} className="text-white">
+                  Submit
+                </Button>
               </div>
             </>
           ) : (

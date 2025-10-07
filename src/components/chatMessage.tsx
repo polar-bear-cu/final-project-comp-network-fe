@@ -36,7 +36,7 @@ const ChatMessage = ({
         }`}
       >
         <p
-          className={`border text-md p-3 rounded-md ${
+          className={`max-w-[60%] border text-md p-3 rounded-md break-all whitespace-pre-wrap ${
             isMe
               ? "border-primary bg-primary text-white dark:text-foreground"
               : "border-background bg-background text-primary dark:text-white"
@@ -44,7 +44,8 @@ const ChatMessage = ({
         >
           {message}
         </p>
-        <p className="text-sm text-primary dark:text-white">
+
+        <p className="text-sm text-foreground">
           {convertDateToDateTimeString(datetime)}
         </p>
       </div>
