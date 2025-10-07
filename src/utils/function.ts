@@ -70,19 +70,6 @@ export function checkFormValidation(
   return { pass: true, field: null, message: "" };
 }
 
-export function convertDateToDateString(dateObject: Date) {
-  const date =
-    dateObject.getDate() < 10
-      ? "0" + dateObject.getDate()
-      : dateObject.getDate();
-  const month =
-    dateObject.getMonth() < 10
-      ? "0" + dateObject.getMonth()
-      : dateObject.getMonth();
-  const year = dateObject.getFullYear() + 543;
-  return date + "/" + month + "/" + year;
-}
-
 export function convertDateToDateTimeString(dateObject: Date) {
   const date =
     dateObject.getDate() < 10

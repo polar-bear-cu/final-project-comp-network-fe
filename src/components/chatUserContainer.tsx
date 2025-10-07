@@ -1,5 +1,5 @@
-import { convertDateToDateString } from "@/utils/function";
 import { UserCircle } from "lucide-react";
+import { useState } from "react";
 
 export interface ChatUserInterface {
   id: string;
@@ -18,11 +18,10 @@ interface ChatContainerProps {
 
 const ChatUserContainer = ({
   username,
-  lastMessage,
-  datetime,
   onClick,
   isActive = false,
 }: ChatContainerProps) => {
+  const [isOnline, setOnline] = useState(true);
   return (
     <div
       onClick={onClick}
@@ -39,15 +38,19 @@ const ChatUserContainer = ({
           <span className="font-semibold text-md truncate text-background dark:text-foreground">
             {username}
           </span>
-          <span className="text-background dark:text-foreground text-sm truncate">
-            {lastMessage}
-          </span>
+          {isOnline ? (
+            <span className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <p className="text-sm text-green-500">Online</p>
+            </span>
+          ) : (
+            <span className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+              <p className="text-sm text-gray-500">Offline</p>
+            </span>
+          )}
         </div>
       </div>
-
-      <span className="text-background dark:text-foreground text-xs font-medium">
-        {convertDateToDateString(datetime)}
-      </span>
     </div>
   );
 };
