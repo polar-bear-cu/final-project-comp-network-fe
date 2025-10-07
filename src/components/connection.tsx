@@ -1,4 +1,4 @@
-import { BASE_URL } from "@/utils/api";
+import { BASE_API_PATH } from "@/utils/const";
 import { useEffect, useState } from "react";
 
 const ConnectionCheck = () => {
@@ -7,7 +7,7 @@ const ConnectionCheck = () => {
   useEffect(() => {
     async function checkConnection() {
       try {
-        const response = await fetch(`${BASE_URL}/v1/connection`);
+        const response = await fetch(`${BASE_API_PATH}/v1/connection`);
         if (response.ok) {
           setHaveConnected(true);
         }

@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/context/userContext";
 import type { UserInterface } from "@/interface/user";
-import { BASE_URL, type ResponseInterface } from "@/utils/api";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { X, Moon, Sun } from "lucide-react";
@@ -11,12 +10,17 @@ import ChatUserContainer, {
 import ChatMessage, {
   type ChatMessageInterface,
 } from "@/components/chatMessage";
+import { useSocket } from "@/context/socketContext";
+import { BASE_API_PATH } from "@/utils/const";
+import type { ResponseInterface } from "@/interface/api";
 
 const ChatPage = () => {
   const navigate = useNavigate();
   const { user, setUser } = useUser();
+  const { connectSocket, disconnectSocket } = useSocket();
   const [loading, setLoading] = useState(true);
   const [openLogoutPopup, setOpenLogoutPopup] = useState(false);
+  const [openAddFriendPopup, setOpenAddFriendPopup] = useState(false);
   const [chatUsers, setChatUsers] = useState<ChatUserInterface[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessageInterface[]>([]);
   const [messageInput, setMessageInput] = useState<string>("");
@@ -33,7 +37,7 @@ const ChatPage = () => {
   useEffect(() => {
     async function loadUser() {
       try {
-        const res = await fetch(`${BASE_URL}/v1/user/me`, {
+        const res = await fetch(`${BASE_API_PATH}/v1/user/me`, {
           method: "GET",
           credentials: "include",
         });
@@ -47,10 +51,9 @@ const ChatPage = () => {
           }).map((_, i) => ({
             id: `User-${i + 1}`,
             username: `User-${i + 1}`,
-            datetime: new Date(),
-            lastMessage: `This is message ${i + 1}`,
           }));
           setChatUsers(sampleChatUsers);
+          connectSocket(data.message.userid);
         } else {
           navigate("/login");
         }
@@ -74,7 +77,7 @@ const ChatPage = () => {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/v1/user/logout`, {
+      const res = await fetch(`${BASE_API_PATH}/v1/user/logout`, {
         method: "GET",
         credentials: "include",
       });
@@ -84,6 +87,7 @@ const ChatPage = () => {
       if (data.success) {
         setUser(null);
         setOpenLogoutPopup(false);
+        disconnectSocket(data.message.userid);
         window.location.href = "/login";
       } else {
         console.error("Logout failed:", data.message);
@@ -144,6 +148,23 @@ const ChatPage = () => {
     </div>
   );
 
+  const AddFriendPopup = () => (
+    <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm flex justify-center items-center z-50">
+      <div
+        className="bg-white dark:bg-card rounded-xl w-[80%] h-[80%] p-6 relative shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          className="absolute top-3 right-3 text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white cursor-pointer"
+          onClick={() => setOpenAddFriendPopup(false)}
+        >
+          <X size={20} />
+        </button>
+        <p>This is Add Friend Popup</p>
+      </div>
+    </div>
+  );
+
   const activeUser = chatUsers.find((c) => c.id === activeChatId);
 
   if (loading) {
@@ -174,8 +195,6 @@ const ChatPage = () => {
               <ChatUserContainer
                 key={chat.id}
                 username={chat.username}
-                lastMessage={chat.lastMessage}
-                datetime={chat.datetime}
                 onClick={() => setActiveChatId(chat.id)}
                 isActive={chat.id === activeChatId}
               />
@@ -187,7 +206,7 @@ const ChatPage = () => {
               <p className="text-md font-medium">Logged in as:</p>
               <p className="text-lg font-bold">{user.username ?? "Unknown"}</p>
             </div>
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-1 items-center">
               <Button
                 variant="outline"
                 className="cursor-pointer text-primary dark:text-white"
@@ -196,9 +215,20 @@ const ChatPage = () => {
                 {darkMode ? <Sun size={18} /> : <Moon size={18} />}
               </Button>
               <Button
+                className="cursor-pointer text-white"
+                onClick={() => {
+                  setOpenAddFriendPopup(true);
+                }}
+              >
+                Add Friend
+              </Button>
+
+              <Button
                 variant="destructive"
                 className="cursor-pointer"
-                onClick={() => setOpenLogoutPopup(true)}
+                onClick={() => {
+                  setOpenLogoutPopup(true);
+                }}
               >
                 Log out
               </Button>
@@ -267,6 +297,9 @@ const ChatPage = () => {
 
       {/* Logout Popup */}
       {openLogoutPopup && <LogoutPopup />}
+
+      {/* Add Friend Popup */}
+      {openAddFriendPopup && <AddFriendPopup />}
     </>
   );
 };

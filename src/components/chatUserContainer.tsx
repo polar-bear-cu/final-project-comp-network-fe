@@ -4,14 +4,10 @@ import { useState } from "react";
 export interface ChatUserInterface {
   id: string;
   username: string;
-  datetime: Date;
-  lastMessage: string;
 }
 
 interface ChatContainerProps {
   username: string;
-  lastMessage?: string;
-  datetime: Date;
   onClick?: () => void;
   isActive?: boolean;
 }

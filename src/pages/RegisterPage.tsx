@@ -1,7 +1,8 @@
 import ConnectionCheck from "@/components/connection";
 import { Button } from "@/components/ui/button";
+import type { ResponseInterface } from "@/interface/api";
 import type { FormDataInterface, FormErrorField } from "@/interface/form";
-import { BASE_URL, type ResponseInterface } from "@/utils/api";
+import { BASE_API_PATH } from "@/utils/const";
 import { checkFormValidation } from "@/utils/function";
 import { Eye, EyeOff, Loader } from "lucide-react";
 import { useState } from "react";
@@ -33,7 +34,7 @@ const RegisterPage = () => {
     }
 
     try {
-      const response = await fetch(`${BASE_URL}/v1/user/register`, {
+      const response = await fetch(`${BASE_API_PATH}/v1/user/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

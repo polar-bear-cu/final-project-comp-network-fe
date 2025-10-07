@@ -7,6 +7,7 @@ import RegisterPage from "./pages/RegisterPage";
 import LandingPage from "./pages/LandingPage";
 import ChatPage from "./pages/ChatPage";
 import { UserProvider } from "./context/userContext";
+import { SocketProvider } from "./context/socketContext";
 
 const router = createBrowserRouter([
   {
@@ -25,14 +26,14 @@ const router = createBrowserRouter([
     path: "/chat",
     element: (
       <UserProvider>
-        <ChatPage />
+        <SocketProvider>
+          <ChatPage />
+        </SocketProvider>
       </UserProvider>
     ),
   },
 ]);
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>
+  <RouterProvider router={router} />
 );
