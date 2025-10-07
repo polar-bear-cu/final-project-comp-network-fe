@@ -1,22 +1,25 @@
+import { convertDateToDateString } from "@/utils/function";
 import { UserCircle } from "lucide-react";
 
 export interface ChatUserInterface {
-  id: number;
+  id: string;
   username: string;
+  datetime: Date;
+  lastMessage: string;
 }
 
 interface ChatContainerProps {
   username: string;
   lastMessage?: string;
-  time?: string;
+  datetime: Date;
   onClick?: () => void;
   isActive?: boolean;
 }
 
 const ChatUserContainer = ({
   username,
-  lastMessage = "This is a message preview...",
-  time = "12:34 PM",
+  lastMessage,
+  datetime,
   onClick,
   isActive = false,
 }: ChatContainerProps) => {
@@ -28,18 +31,23 @@ const ChatUserContainer = ({
       `}
     >
       <div className="flex items-center gap-3">
-        <UserCircle size={32} className="text-gray-200" />
+        <UserCircle
+          size={32}
+          className="text-background dark:text-foreground"
+        />
         <div className="flex flex-col overflow-hidden">
-          <span className="font-semibold text-md truncate text-foreground dark:text-card-foreground">
+          <span className="font-semibold text-md truncate text-background dark:text-foreground">
             {username}
           </span>
-          <span className="text-black-300 dark:text-gray-300 text-sm truncate">
+          <span className="text-background dark:text-foreground text-sm truncate">
             {lastMessage}
           </span>
         </div>
       </div>
 
-      <span className="text-gray-200 text-xs font-medium">{time}</span>
+      <span className="text-background dark:text-foreground text-xs font-medium">
+        {convertDateToDateString(datetime)}
+      </span>
     </div>
   );
 };

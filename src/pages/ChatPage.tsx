@@ -8,13 +8,18 @@ import { X, Moon, Sun } from "lucide-react";
 import ChatUserContainer, {
   type ChatUserInterface,
 } from "@/components/chatUserContainer";
+import ChatMessage, {
+  type ChatMessageInterface,
+} from "@/components/chatMessage";
 
 const ChatPage = () => {
   const navigate = useNavigate();
   const { user, setUser } = useUser();
+  const [loading, setLoading] = useState(true);
   const [openLogoutPopup, setOpenLogoutPopup] = useState(false);
   const [chatUsers, setChatUsers] = useState<ChatUserInterface[]>([]);
-  const [activeChatId, setActiveChatId] = useState<number | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessageInterface[]>([]);
+  const [activeChatId, setActiveChatId] = useState<string>("");
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
@@ -25,23 +30,46 @@ const ChatPage = () => {
           credentials: "include",
         });
         const data: ResponseInterface<UserInterface> = await res.json();
+
         if (data.success) {
           setUser(data.message);
-          const sampleChatUsers = Array.from({ length: 20 }).map((_, i) => ({
-            id: i + 1,
+
+          const sampleChatUsers: ChatUserInterface[] = Array.from({
+            length: 20,
+          }).map((_, i) => ({
+            id: `User-${i + 1}`,
             username: `User-${i + 1}`,
+            datetime: new Date(),
+            lastMessage: `This is message ${i + 1}`,
           }));
           setChatUsers(sampleChatUsers);
+
+          const sampleChatMessages: ChatMessageInterface[] = Array.from({
+            length: 20,
+          }).map((_, i) => {
+            const sender =
+              Math.random() < 0.5 ? "User-1" : data.message.username;
+            return {
+              id: `msg-${i}`,
+              username: sender,
+              isMe: sender === data.message.username,
+              message: `Sample message ${i + 1}`,
+              datetime: new Date(),
+            };
+          });
+          setChatMessages(sampleChatMessages);
         } else {
           navigate("/login");
         }
       } catch (err) {
         console.error("Error fetching user:", err);
         navigate("/login");
+      } finally {
+        setLoading(false);
       }
     }
     loadUser();
-  }, []);
+  }, [navigate, setUser]);
 
   useEffect(() => {
     if (darkMode) {
@@ -50,11 +78,6 @@ const ChatPage = () => {
       document.documentElement.classList.remove("dark");
     }
   }, [darkMode]);
-
-  if (!user) {
-    navigate("/login");
-    return null;
-  }
 
   const handleLogout = async () => {
     try {
@@ -115,6 +138,20 @@ const ChatPage = () => {
 
   const activeUser = chatUsers.find((c) => c.id === activeChatId);
 
+  if (loading) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center bg-background dark:bg-card">
+        <p className="text-xl text-primary dark:text-white animate-pulse">
+          Loading...
+        </p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <>
       <div className="w-full h-screen flex bg-gradient-to-tl from-primary to-secondary dark:from-primary/70 dark:to-secondary/70 overflow-hidden">
@@ -129,6 +166,8 @@ const ChatPage = () => {
               <ChatUserContainer
                 key={chat.id}
                 username={chat.username}
+                lastMessage={chat.lastMessage}
+                datetime={chat.datetime}
                 onClick={() => setActiveChatId(chat.id)}
                 isActive={chat.id === activeChatId}
               />
@@ -162,9 +201,22 @@ const ChatPage = () => {
         {/* Right Content */}
         <main className="w-full h-full bg-gradient-to-br from-background to-primary/10 dark:from-card dark:to-primary/20 backdrop-blur-lg flex flex-col z-10">
           {activeUser ? (
-            <h2 className="sticky top-0 bg-card text-primary dark:text-white text-2xl font-bold p-3 z-20 mb-2">
-              {activeUser.username}
-            </h2>
+            <>
+              <h2 className="sticky top-0 bg-card text-primary dark:text-white text-2xl font-bold p-3 z-20 mb-2">
+                {activeUser.username}
+              </h2>
+              <ul className="flex-1 overflow-y-auto p-4 space-y-4">
+                {chatMessages.map((chat) => (
+                  <ChatMessage
+                    key={chat.id}
+                    username={chat.username}
+                    isMe={chat.username === user.username}
+                    message={chat.message}
+                    datetime={chat.datetime}
+                  />
+                ))}
+              </ul>
+            </>
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <h1 className="text-6xl font-bold text-primary dark:text-foreground">
