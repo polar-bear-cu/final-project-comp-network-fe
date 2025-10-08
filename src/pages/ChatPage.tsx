@@ -3,7 +3,7 @@ import { useUser } from "@/context/userContext";
 import type { UserInterface } from "@/interface/user";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { X, Moon, Sun } from "lucide-react";
+import { Moon, Sun, X } from "lucide-react";
 import ChatUserContainer, {
   type ChatUserInterface,
 } from "@/components/chatUserContainer";
@@ -13,6 +13,8 @@ import ChatMessage, {
 import { useSocket } from "@/context/socketContext";
 import { BASE_API_PATH } from "@/utils/const";
 import type { ResponseInterface } from "@/interface/api";
+import LogoutPopup from "@/elements/logoutPopup";
+import AddFriendPopup from "@/elements/addFriendPopup";
 
 const ChatPage = () => {
   const navigate = useNavigate();
@@ -26,8 +28,10 @@ const ChatPage = () => {
   const [messageInput, setMessageInput] = useState<string>("");
   const [activeChatId, setActiveChatId] = useState<string>("");
   const [darkMode, setDarkMode] = useState(false);
+  const [isOpenRightPanelInTablet, setOpenRightPanelInTablet] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -112,59 +116,6 @@ const ChatPage = () => {
     setMessageInput("");
   };
 
-  const LogoutPopup = () => (
-    <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm flex justify-center items-center z-50">
-      <div
-        className="bg-white dark:bg-card rounded-xl w-[300px] p-6 relative shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          className="absolute top-3 right-3 text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white cursor-pointer"
-          onClick={() => setOpenLogoutPopup(false)}
-        >
-          <X size={20} />
-        </button>
-
-        <h2 className="text-xl font-bold mb-4 text-primary dark:text-white">
-          Log out
-        </h2>
-        <p className="text-gray-700 dark:text-gray-200 mb-6">
-          Are you sure you want to log out?
-        </p>
-
-        <div className="flex justify-end gap-3">
-          <Button
-            variant="outline"
-            className="cursor-pointer text-primary dark:text-white"
-            onClick={() => setOpenLogoutPopup(false)}
-          >
-            Cancel
-          </Button>
-          <Button className="cursor-pointer text-white" onClick={handleLogout}>
-            Confirm
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const AddFriendPopup = () => (
-    <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm flex justify-center items-center z-50">
-      <div
-        className="bg-white dark:bg-card rounded-xl w-[80%] h-[80%] p-6 relative shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          className="absolute top-3 right-3 text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white cursor-pointer"
-          onClick={() => setOpenAddFriendPopup(false)}
-        >
-          <X size={20} />
-        </button>
-        <p>This is Add Friend Popup</p>
-      </div>
-    </div>
-  );
-
   const activeUser = chatUsers.find((c) => c.id === activeChatId);
 
   if (loading) {
@@ -177,15 +128,13 @@ const ChatPage = () => {
     );
   }
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   return (
     <>
       <div className="w-full h-screen flex bg-gradient-to-tl from-primary to-secondary dark:from-primary/70 dark:to-secondary/70 overflow-hidden">
         {/* Left Sidebar */}
-        <aside className="w-[30%] h-full bg-gradient-to-br from-primary to-primary/10 dark:from-primary/20 dark:to-primary/5 backdrop-blur-lg flex flex-col">
+        <aside className="w-full md:max-w-[400px] shrink-0 h-full bg-gradient-to-br from-primary to-primary/10 dark:from-primary/20 dark:to-primary/5 backdrop-blur-lg flex flex-col">
           <h2 className="sticky top-0 bg-card text-primary dark:text-white text-2xl font-bold p-3 shadow-md z-10 mb-2">
             Your Chats
           </h2>
@@ -195,13 +144,18 @@ const ChatPage = () => {
               <ChatUserContainer
                 key={chat.id}
                 username={chat.username}
-                onClick={() => setActiveChatId(chat.id)}
+                onClick={() => {
+                  setActiveChatId(chat.id);
+                  if (window.innerWidth < 768) {
+                    setOpenRightPanelInTablet(true);
+                  }
+                }}
                 isActive={chat.id === activeChatId}
               />
             ))}
           </ul>
 
-          <div className="w-full h-20 bg-card text-primary dark:text-white p-3 shadow-md z-10 relative flex justify-between items-center gap-4">
+          <div className="w-full h-20 bg-card text-primary dark:text-white p-3 shadow-md z-10 relative flex justify-between gap-4">
             <div>
               <p className="text-md font-medium">Logged in as:</p>
               <p className="text-lg font-bold">{user.username ?? "Unknown"}</p>
@@ -236,13 +190,33 @@ const ChatPage = () => {
           </div>
         </aside>
 
-        {/* Right Content */}
-        <main className="w-full h-full bg-gradient-to-br from-background to-primary/10 dark:from-card dark:to-primary/20 backdrop-blur-lg flex flex-col z-10">
+        {/* Right Panel */}
+        <main
+          className={`fixed md:static top-0 right-0 w-full md:w-auto md:flex-1 h-full 
+            bg-gradient-to-br from-background to-primary/10 dark:from-card dark:to-primary/20 
+            backdrop-blur-lg flex flex-col z-20 transform transition-transform duration-300
+            ${
+              isOpenRightPanelInTablet
+                ? "translate-x-0"
+                : "translate-x-full md:translate-x-0"
+            }
+          `}
+        >
           {activeUser ? (
             <>
-              <h2 className="sticky top-0 bg-card text-primary dark:text-white text-2xl font-bold p-3 z-20 mb-2">
-                {activeUser.username}
-              </h2>
+              <div className="sticky top-0 bg-card text-primary dark:text-white text-2xl font-bold p-3 z-20 mb-2 flex justify-between items-center">
+                <span>{activeUser.username}</span>
+                <button
+                  className="md:hidden p-2 rounded-full hover:bg-muted transition"
+                  onClick={() => {
+                    setOpenRightPanelInTablet(false);
+                    setActiveChatId("");
+                  }}
+                >
+                  <X size={22} />
+                </button>
+              </div>
+
               {chatMessages.length > 0 ? (
                 <ul className="flex-1 overflow-y-auto p-4 space-y-4">
                   {chatMessages.map((chat) => (
@@ -263,6 +237,7 @@ const ChatPage = () => {
                   </h1>
                 </div>
               )}
+
               <div className="w-full h-20 bg-card text-primary dark:text-white p-3 flex gap-4 items-center">
                 <textarea
                   value={messageInput}
@@ -295,11 +270,16 @@ const ChatPage = () => {
         </main>
       </div>
 
-      {/* Logout Popup */}
-      {openLogoutPopup && <LogoutPopup />}
-
-      {/* Add Friend Popup */}
-      {openAddFriendPopup && <AddFriendPopup />}
+      {/* Popups */}
+      {openLogoutPopup && (
+        <LogoutPopup
+          setOpenLogoutPopup={setOpenLogoutPopup}
+          handleLogout={handleLogout}
+        />
+      )}
+      {openAddFriendPopup && (
+        <AddFriendPopup setOpenAddFriendPopup={setOpenAddFriendPopup} />
+      )}
     </>
   );
 };
