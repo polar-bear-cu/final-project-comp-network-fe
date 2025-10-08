@@ -7,32 +7,26 @@ import LandingPage from "./pages/LandingPage";
 import ChatPage from "./pages/ChatPage";
 import { UserProvider } from "./context/userContext";
 import { SocketProvider } from "./context/socketContext";
+import ProtectedRoute from "./middleware/protectedRoute";
 
 const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <LandingPage />,
-  },
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
-  {
-    path: "/register",
-    element: <RegisterPage />,
-  },
+  { path: "/", element: <LandingPage /> },
+  { path: "/login", element: <LoginPage /> },
+  { path: "/register", element: <RegisterPage /> },
   {
     path: "/chat",
     element: (
-      <UserProvider>
-        <SocketProvider>
-          <ChatPage />
-        </SocketProvider>
-      </UserProvider>
+      <ProtectedRoute>
+        <ChatPage />
+      </ProtectedRoute>
     ),
   },
 ]);
 
 createRoot(document.getElementById("root")!).render(
-  <RouterProvider router={router} />
+  <UserProvider>
+    <SocketProvider>
+      <RouterProvider router={router} />
+    </SocketProvider>
+  </UserProvider>
 );

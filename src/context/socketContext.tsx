@@ -3,6 +3,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -12,7 +13,6 @@ import { useUser } from "./userContext";
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
-  connectSocket: (userid: string) => void;
   disconnectSocket: () => void;
 }
 
@@ -29,62 +29,71 @@ interface SocketProviderProps {
 }
 
 export const SocketProvider = ({ children }: SocketProviderProps) => {
-  const [socket, setSocket] = useState<Socket | null>(null);
   const { user } = useUser();
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.userid) {
+      if (socketRef.current) {
+        console.log("👋 User logged out, disconnecting socket");
+        socketRef.current.disconnect();
+        socketRef.current = null;
+        setSocket(null);
+        setIsConnected(false);
+      }
+      return;
+    }
+
+    if (socketRef.current) {
+      console.log("Socket already connected");
+      return;
+    }
 
     const newSocket = io(BASE_SOCKET_PATH, {
       auth: { userid: user.userid },
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
     });
 
     newSocket.on("connect", () => {
+      console.log("Socket connected:", newSocket.id);
       setIsConnected(true);
     });
 
-    newSocket.on("disconnect", () => {
+    newSocket.on("disconnect", (reason) => {
+      console.log("Socket disconnected:", reason);
       setIsConnected(false);
     });
 
     newSocket.on("connect_error", (err) => {
-      console.error("Socket connection error:", err);
+      console.error("Connection error:", err.message);
     });
 
+    socketRef.current = newSocket;
     setSocket(newSocket);
 
     return () => {
-      newSocket.disconnect();
+      console.log("🧹 Cleaning up socket connection");
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
     };
-  }, [user]);
-
-  const connectSocket = (userid: string) => {
-    if (!socket) return;
-    if (!socket.connected) {
-      socket.auth = { userid };
-      socket.connect();
-    }
-  };
+  }, [user?.userid]);
 
   const disconnectSocket = () => {
-    if (!socket) return;
-    if (socket.connected) {
-      socket.disconnect();
+    if (socketRef.current?.connected) {
+      console.log("👋 Manual disconnect");
+      socketRef.current.disconnect();
     }
   };
 
-  useEffect(() => {
-    if (socket && user) {
-      connectSocket(user.userid);
-    }
-  }, [socket, user]);
-
   return (
-    <SocketContext.Provider
-      value={{ socket, isConnected, connectSocket, disconnectSocket }}
-    >
+    <SocketContext.Provider value={{ socket, isConnected, disconnectSocket }}>
       {children}
     </SocketContext.Provider>
   );

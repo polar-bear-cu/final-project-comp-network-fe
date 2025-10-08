@@ -2,7 +2,7 @@ import ConnectionCheck from "@/components/connection";
 import { Button } from "@/components/ui/button";
 import type { ResponseInterface } from "@/interface/api";
 import type { FormDataInterface, FormErrorField } from "@/interface/form";
-import { BASE_API_PATH } from "@/utils/const";
+import { BASE_API_PATH, JWT } from "@/utils/const";
 import { checkFormValidation } from "@/utils/function";
 import { Eye, EyeOff, Loader } from "lucide-react";
 import { useState } from "react";
@@ -38,7 +38,6 @@ const LoginPage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-        credentials: "include",
       });
 
       const data: ResponseInterface<string> = await response.json();
@@ -50,8 +49,9 @@ const LoginPage = () => {
       } else {
         setErrorSending(false);
         setErrorField(null);
+        localStorage.setItem(JWT, data.message);
         setFormData({ username: "", password: "" });
-        window.location.href = "/chat";
+        navigate("/chat");
       }
     } catch (error) {
       setErrorSending(true);

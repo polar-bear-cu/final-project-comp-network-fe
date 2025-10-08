@@ -11,7 +11,7 @@ import ChatMessage, {
   type ChatMessageInterface,
 } from "@/components/chatMessage";
 import { useSocket } from "@/context/socketContext";
-import { BASE_API_PATH } from "@/utils/const";
+import { BASE_API_PATH, JWT } from "@/utils/const";
 import type { ResponseInterface } from "@/interface/api";
 import LogoutPopup from "@/elements/logoutPopup";
 import AddFriendPopup from "@/elements/addFriendPopup";
@@ -19,7 +19,7 @@ import AddFriendPopup from "@/elements/addFriendPopup";
 const ChatPage = () => {
   const navigate = useNavigate();
   const { user, setUser } = useUser();
-  const { connectSocket, disconnectSocket, socket } = useSocket();
+  const { disconnectSocket, socket } = useSocket();
   const [loading, setLoading] = useState(true);
   const [openLogoutPopup, setOpenLogoutPopup] = useState(false);
   const [openAddFriendPopup, setOpenAddFriendPopup] = useState(false);
@@ -40,16 +40,24 @@ const ChatPage = () => {
 
   useEffect(() => {
     async function loadUser() {
+      const token = localStorage.getItem(JWT);
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
       try {
         const res = await fetch(`${BASE_API_PATH}/v1/user/me`, {
           method: "GET",
-          credentials: "include",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
+
         const data: ResponseInterface<UserInterface> = await res.json();
 
         if (data.success) {
           setUser(data.message);
-          connectSocket(data.message.userid);
         } else {
           navigate("/login");
         }
@@ -60,6 +68,7 @@ const ChatPage = () => {
         setLoading(false);
       }
     }
+
     loadUser();
   }, [navigate, setUser]);
 
@@ -71,26 +80,11 @@ const ChatPage = () => {
     }
   }, [darkMode]);
 
-  const handleLogout = async () => {
-    try {
-      const res = await fetch(`${BASE_API_PATH}/v1/user/logout`, {
-        method: "GET",
-        credentials: "include",
-      });
-
-      const data: ResponseInterface<UserInterface> = await res.json();
-
-      if (data.success) {
-        setUser(null);
-        setOpenLogoutPopup(false);
-        disconnectSocket();
-        window.location.href = "/login";
-      } else {
-        console.error("Logout failed:", data.message);
-      }
-    } catch (err) {
-      console.error("Error during logout:", err);
-    }
+  const handleLogout = () => {
+    setUser(null);
+    disconnectSocket();
+    localStorage.removeItem(JWT);
+    navigate("/login");
   };
 
   const handleSendMessage = async () => {
@@ -138,9 +132,7 @@ const ChatPage = () => {
                 username={chat.username}
                 onClick={() => {
                   setActiveChatId(chat.id);
-                  if (window.innerWidth < 768) {
-                    setOpenRightPanelInTablet(true);
-                  }
+                  if (window.innerWidth < 768) setOpenRightPanelInTablet(true);
                 }}
                 isActive={chat.id === activeChatId}
               />
@@ -173,9 +165,7 @@ const ChatPage = () => {
               <Button
                 variant="destructive"
                 className="cursor-pointer"
-                onClick={() => {
-                  setOpenLogoutPopup(true);
-                }}
+                onClick={() => setOpenLogoutPopup(true)}
               >
                 Log out
               </Button>
@@ -192,8 +182,7 @@ const ChatPage = () => {
               isOpenRightPanelInTablet
                 ? "translate-x-0"
                 : "translate-x-full md:translate-x-0"
-            }
-          `}
+            }`}
         >
           {activeUser ? (
             <>
