@@ -19,7 +19,7 @@ import AddFriendPopup from "@/elements/addFriendPopup";
 const ChatPage = () => {
   const navigate = useNavigate();
   const { user, setUser } = useUser();
-  const { connectSocket, disconnectSocket } = useSocket();
+  const { connectSocket, disconnectSocket, socket } = useSocket();
   const [loading, setLoading] = useState(true);
   const [openLogoutPopup, setOpenLogoutPopup] = useState(false);
   const [openAddFriendPopup, setOpenAddFriendPopup] = useState(false);
@@ -49,14 +49,6 @@ const ChatPage = () => {
 
         if (data.success) {
           setUser(data.message);
-
-          const sampleChatUsers: ChatUserInterface[] = Array.from({
-            length: 20,
-          }).map((_, i) => ({
-            id: `User-${i + 1}`,
-            username: `User-${i + 1}`,
-          }));
-          setChatUsers(sampleChatUsers);
           connectSocket(data.message.userid);
         } else {
           navigate("/login");
@@ -91,7 +83,7 @@ const ChatPage = () => {
       if (data.success) {
         setUser(null);
         setOpenLogoutPopup(false);
-        disconnectSocket(data.message.userid);
+        disconnectSocket();
         window.location.href = "/login";
       } else {
         console.error("Logout failed:", data.message);
@@ -171,6 +163,7 @@ const ChatPage = () => {
               <Button
                 className="cursor-pointer text-white"
                 onClick={() => {
+                  socket?.emit("open-addfriend-popup");
                   setOpenAddFriendPopup(true);
                 }}
               >

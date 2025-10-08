@@ -12,8 +12,8 @@ import { useUser } from "./userContext";
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
-  connectSocket: (userId: string) => void;
-  disconnectSocket: (userId: string) => void;
+  connectSocket: (userid: string) => void;
+  disconnectSocket: () => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -37,9 +37,8 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     if (!user) return;
 
     const newSocket = io(BASE_SOCKET_PATH, {
-      query: { userid: user.userid },
+      auth: { userid: user.userid },
       transports: ["websocket"],
-      autoConnect: true,
     });
 
     newSocket.on("connect", () => {
@@ -61,15 +60,15 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     };
   }, [user]);
 
-  const connectSocket = (userId: string) => {
+  const connectSocket = (userid: string) => {
     if (!socket) return;
     if (!socket.connected) {
-      socket.auth = { userId };
+      socket.auth = { userid };
       socket.connect();
     }
   };
 
-  const disconnectSocket = (userId: string) => {
+  const disconnectSocket = () => {
     if (!socket) return;
     if (socket.connected) {
       socket.disconnect();
