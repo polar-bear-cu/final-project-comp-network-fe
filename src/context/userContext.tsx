@@ -3,7 +3,12 @@ import type { UserInterface } from "@/interface/user";
 
 interface UserContextProps {
   user: UserInterface | null;
-  setUser: (user: UserInterface | null) => void;
+  setUser: (
+    user:
+      | UserInterface
+      | null
+      | ((prev: UserInterface | null) => UserInterface | null)
+  ) => void;
 }
 
 export const UserContext = createContext<UserContextProps>({

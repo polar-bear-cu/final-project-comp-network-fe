@@ -123,7 +123,7 @@ const ChatPage = () => {
     setMessageInput("");
   };
 
-  const handleAddFriend = async (friend: UserInterface) => {
+  const handleAddFriend = async (friendid: string) => {
     try {
       const token = localStorage.getItem(JWT);
       if (!token) {
@@ -137,18 +137,27 @@ const ChatPage = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ friend }),
+        body: JSON.stringify({ friend: { userid: friendid } }),
       });
-
-      console.log(response);
 
       const data: ResponseInterface<string> = await response.json();
 
       if (data.success) {
         socket?.emit("friend-added", {
           userid: user?.userid,
-          friendid: friend.userid,
+          friendid: friendid,
         });
+
+        const userRes = await fetch(`${BASE_API_PATH}/v1/user/me`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const userData: ResponseInterface<UserInterface> = await userRes.json();
+        if (userData.success) {
+          setUser(userData.message);
+        }
       }
     } catch (err) {
       console.error("Error adding friend:", err);

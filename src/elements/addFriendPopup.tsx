@@ -1,13 +1,13 @@
 import { useSocket } from "@/context/socketContext";
 import { useUser } from "@/context/userContext";
-import { X, UserPlus, Check } from "lucide-react";
+import { X, UserPlus, Check, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { UserInterface } from "@/interface/user";
 
 interface AddFriendPopupProps {
   setOpenAddFriendPopup: (bool: boolean) => void;
-  handleAddFriend: (user: UserInterface) => void;
+  handleAddFriend: (friendid: string) => void;
 }
 
 const AddFriendPopup = ({
@@ -22,8 +22,13 @@ const AddFriendPopup = ({
   useEffect(() => {
     if (!socket || !user) return;
 
+    socket.emit("get-active-users");
+
     socket.on("active-users", (users: UserInterface[]) => {
-      const filteredUsers = users.filter((u) => u.userid !== user.userid);
+      const friendIds = user.friendList.map((f: UserInterface) => f.userid);
+      const filteredUsers = users.filter(
+        (u) => u.userid !== user.userid && !friendIds.includes(u.userid)
+      );
       setActiveUsers(filteredUsers);
     });
 
@@ -32,9 +37,9 @@ const AddFriendPopup = ({
     };
   }, [socket, user]);
 
-  const handleAddFriendClick = (user: UserInterface) => {
-    handleAddFriend(user);
-    setAddedFriends((prev) => [...prev, user.userid]);
+  const handleAddFriendClick = (friendid: string) => {
+    handleAddFriend(friendid);
+    setAddedFriends((prev) => [...prev, friendid]);
   };
 
   return (
@@ -72,7 +77,7 @@ const AddFriendPopup = ({
                   <Button
                     size="sm"
                     className="cursor-pointer flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed"
-                    onClick={() => handleAddFriendClick(u)}
+                    onClick={() => handleAddFriendClick(u.userid)}
                     disabled={isAdded}
                   >
                     {isAdded ? (
