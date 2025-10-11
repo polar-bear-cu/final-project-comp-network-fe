@@ -7,19 +7,20 @@ export interface ChatUserInterface {
 }
 
 interface ChatContainerProps {
-  username: string;
+  user: ChatUserInterface;
   onClick?: () => void;
   isActive?: boolean;
 }
 
 const ChatUserContainer = ({
-  username,
+  user,
   onClick,
   isActive = false,
 }: ChatContainerProps) => {
   const [isOnline, setOnline] = useState(true);
   return (
     <div
+      key={user.id}
       onClick={onClick}
       className={`flex items-center justify-between w-full p-3 rounded-xl cursor-pointer transition-all duration-200
         ${isActive ? "bg-primary/60 " : "hover:bg-card/10"}
@@ -32,7 +33,7 @@ const ChatUserContainer = ({
         />
         <div className="flex flex-col overflow-hidden">
           <span className="font-semibold text-md truncate text-background dark:text-foreground">
-            {username}
+            {user.username}
           </span>
           {isOnline ? (
             <span className="flex items-center gap-1">

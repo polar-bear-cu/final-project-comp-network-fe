@@ -21,7 +21,7 @@ const ConnectionCheck = () => {
   }, []);
 
   return (
-    <div className="absolute top-4 right-4 flex items-center gap-2 bg-background px-3 py-1 rounded-full shadow-md">
+    <div className="absolute top-4 right-4 flex items-center gap-2 bg-background px-3 py-1 rounded-full shadow-md z-100">
       <div
         className={`w-3 h-3 rounded-full ${
           haveConnected ? "bg-green-500" : "bg-red-500"

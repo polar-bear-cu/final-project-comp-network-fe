@@ -15,6 +15,7 @@ import { BASE_API_PATH, JWT } from "@/utils/const";
 import type { ResponseInterface } from "@/interface/api";
 import LogoutPopup from "@/elements/logoutPopup";
 import AddFriendPopup from "@/elements/addFriendPopup";
+import ConnectionCheck from "@/components/connection";
 
 const ChatPage = () => {
   const navigate = useNavigate();
@@ -29,7 +30,6 @@ const ChatPage = () => {
   const [activeChatId, setActiveChatId] = useState<string>("");
   const [darkMode, setDarkMode] = useState(false);
   const [isOpenRightPanelInTablet, setOpenRightPanelInTablet] = useState(false);
-
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -58,6 +58,12 @@ const ChatPage = () => {
 
         if (data.success) {
           setUser(data.message);
+          setChatUsers(
+            data.message.friendList.map((f: UserInterface) => ({
+              id: f.userid,
+              username: f.username,
+            }))
+          );
         } else {
           navigate("/login");
         }
@@ -79,6 +85,21 @@ const ChatPage = () => {
       document.documentElement.classList.remove("dark");
     }
   }, [darkMode]);
+
+  useEffect(() => {
+    if (!socket || !user) return;
+
+    socket.on("new-friend", (friend: UserInterface) => {
+      setChatUsers((prev) => {
+        if (prev.some((u) => u.id === friend.userid)) return prev;
+        return [...prev, { id: friend.userid, username: friend.username }];
+      });
+    });
+
+    return () => {
+      socket.off("new-friend");
+    };
+  }, [socket, user]);
 
   const handleLogout = () => {
     setUser(null);
@@ -102,15 +123,50 @@ const ChatPage = () => {
     setMessageInput("");
   };
 
+  const handleAddFriend = async (friend: UserInterface) => {
+    try {
+      const token = localStorage.getItem(JWT);
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const response = await fetch(`${BASE_API_PATH}/v1/user/add`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ friend }),
+      });
+
+      console.log(response);
+
+      const data: ResponseInterface<string> = await response.json();
+
+      if (data.success) {
+        socket?.emit("friend-added", {
+          userid: user?.userid,
+          friendid: friend.userid,
+        });
+      }
+    } catch (err) {
+      console.error("Error adding friend:", err);
+    }
+  };
+
   const activeUser = chatUsers.find((c) => c.id === activeChatId);
 
   if (loading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center bg-background dark:bg-card">
-        <p className="text-xl text-primary dark:text-white animate-pulse">
-          Loading...
-        </p>
-      </div>
+      <>
+        <ConnectionCheck />
+        <div className="w-full h-screen flex items-center justify-center bg-background dark:bg-card">
+          <p className="text-xl text-primary dark:text-white animate-pulse">
+            Loading...
+          </p>
+        </div>
+      </>
     );
   }
 
@@ -118,6 +174,7 @@ const ChatPage = () => {
 
   return (
     <>
+      <ConnectionCheck />
       <div className="w-full h-screen flex bg-gradient-to-tl from-primary to-secondary dark:from-primary/70 dark:to-secondary/70 overflow-hidden">
         {/* Left Sidebar */}
         <aside className="w-full md:max-w-[400px] shrink-0 h-full bg-gradient-to-br from-primary to-primary/10 dark:from-primary/20 dark:to-primary/5 backdrop-blur-lg flex flex-col">
@@ -126,15 +183,15 @@ const ChatPage = () => {
           </h2>
 
           <ul className="flex-1 overflow-y-auto space-y-2">
-            {chatUsers.map((chat) => (
+            {chatUsers.map((chatUser: ChatUserInterface) => (
               <ChatUserContainer
-                key={chat.id}
-                username={chat.username}
+                key={chatUser.id}
+                user={chatUser}
                 onClick={() => {
-                  setActiveChatId(chat.id);
+                  setActiveChatId(chatUser.id);
                   if (window.innerWidth < 768) setOpenRightPanelInTablet(true);
                 }}
-                isActive={chat.id === activeChatId}
+                isActive={chatUser.id === activeChatId}
               />
             ))}
           </ul>
@@ -155,7 +212,6 @@ const ChatPage = () => {
               <Button
                 className="cursor-pointer text-white"
                 onClick={() => {
-                  socket?.emit("open-addfriend-popup");
                   setOpenAddFriendPopup(true);
                 }}
               >
@@ -260,7 +316,10 @@ const ChatPage = () => {
         />
       )}
       {openAddFriendPopup && (
-        <AddFriendPopup setOpenAddFriendPopup={setOpenAddFriendPopup} />
+        <AddFriendPopup
+          setOpenAddFriendPopup={setOpenAddFriendPopup}
+          handleAddFriend={handleAddFriend}
+        />
       )}
     </>
   );

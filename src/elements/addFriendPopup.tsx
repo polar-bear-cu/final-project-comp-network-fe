@@ -1,18 +1,23 @@
 import { useSocket } from "@/context/socketContext";
 import { useUser } from "@/context/userContext";
-import { X, UserPlus } from "lucide-react";
+import { X, UserPlus, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { UserInterface } from "@/interface/user";
 
 interface AddFriendPopupProps {
   setOpenAddFriendPopup: (bool: boolean) => void;
+  handleAddFriend: (user: UserInterface) => void;
 }
 
-const AddFriendPopup = ({ setOpenAddFriendPopup }: AddFriendPopupProps) => {
+const AddFriendPopup = ({
+  setOpenAddFriendPopup,
+  handleAddFriend,
+}: AddFriendPopupProps) => {
   const { user } = useUser();
   const { socket } = useSocket();
   const [activeUsers, setActiveUsers] = useState<UserInterface[]>([]);
+  const [addedFriends, setAddedFriends] = useState<string[]>([]);
 
   useEffect(() => {
     if (!socket || !user) return;
@@ -26,6 +31,11 @@ const AddFriendPopup = ({ setOpenAddFriendPopup }: AddFriendPopupProps) => {
       socket.off("active-users");
     };
   }, [socket, user]);
+
+  const handleAddFriendClick = (user: UserInterface) => {
+    handleAddFriend(user);
+    setAddedFriends((prev) => [...prev, user.userid]);
+  };
 
   return (
     <div
@@ -43,30 +53,43 @@ const AddFriendPopup = ({ setOpenAddFriendPopup }: AddFriendPopupProps) => {
           <X size={20} />
         </button>
 
-        {/* หัวข้อ */}
         <h2 className="text-xl font-bold mb-4 text-primary dark:text-white">
           Add Friend
         </h2>
 
         {activeUsers.length > 0 ? (
           <ul className="flex-1 overflow-auto space-y-3">
-            {activeUsers.map((user: UserInterface) => (
-              <li
-                key={user.userid}
-                className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2"
-              >
-                <span className="text-gray-800 dark:text-gray-100">
-                  {user.username}
-                </span>
-                <Button
-                  size="sm"
-                  className="cursor-pointer flex items-center gap-1"
+            {activeUsers.map((u) => {
+              const isAdded = addedFriends.includes(u.userid);
+              return (
+                <li
+                  key={u.userid}
+                  className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2"
                 >
-                  <UserPlus size={16} />
-                  Add
-                </Button>
-              </li>
-            ))}
+                  <span className="text-gray-800 dark:text-gray-100">
+                    {u.username}
+                  </span>
+                  <Button
+                    size="sm"
+                    className="cursor-pointer flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed"
+                    onClick={() => handleAddFriendClick(u)}
+                    disabled={isAdded}
+                  >
+                    {isAdded ? (
+                      <>
+                        <Check size={16} />
+                        Added
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus size={16} />
+                        Add
+                      </>
+                    )}
+                  </Button>
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <p className="text-gray-600 dark:text-gray-300">No active users...</p>
