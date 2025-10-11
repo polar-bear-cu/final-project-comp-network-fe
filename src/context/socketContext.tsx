@@ -37,7 +37,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   useEffect(() => {
     if (!user?.userid) {
       if (socketRef.current) {
-        console.log("👋 User logged out, disconnecting socket");
+        console.log("User logged out, disconnecting socket");
         socketRef.current.disconnect();
         socketRef.current = null;
         setSocket(null);
@@ -52,7 +52,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     }
 
     const newSocket = io(BASE_SOCKET_PATH, {
-      auth: { userid: user.userid },
+      auth: { username: user.username, userid: user.userid },
       transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionDelay: 1000,
@@ -77,7 +77,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     setSocket(newSocket);
 
     return () => {
-      console.log("🧹 Cleaning up socket connection");
+      console.log("Cleaning up socket connection");
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
@@ -87,7 +87,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
   const disconnectSocket = () => {
     if (socketRef.current?.connected) {
-      console.log("👋 Manual disconnect");
+      console.log("Manual disconnect");
       socketRef.current.disconnect();
     }
   };

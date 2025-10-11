@@ -3,6 +3,7 @@ import { useUser } from "@/context/userContext";
 import { X, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import type { UserInterface } from "@/interface/user";
 
 interface AddFriendPopupProps {
   setOpenAddFriendPopup: (bool: boolean) => void;
@@ -11,18 +12,18 @@ interface AddFriendPopupProps {
 const AddFriendPopup = ({ setOpenAddFriendPopup }: AddFriendPopupProps) => {
   const { user } = useUser();
   const { socket } = useSocket();
-  const [activeUserIds, setActiveUserIds] = useState<string[]>([]);
+  const [activeUsers, setActiveUsers] = useState<UserInterface[]>([]);
 
   useEffect(() => {
     if (!socket || !user) return;
 
-    socket.on("active-users-id", (userids: string[]) => {
-      const filteredUserIds = userids.filter((id) => id !== user.userid);
-      setActiveUserIds(filteredUserIds);
+    socket.on("active-users", (users: UserInterface[]) => {
+      const filteredUsers = users.filter((u) => u.userid !== user.userid);
+      setActiveUsers(filteredUsers);
     });
 
     return () => {
-      socket.off("active-users-id");
+      socket.off("active-users");
     };
   }, [socket, user]);
 
@@ -47,15 +48,15 @@ const AddFriendPopup = ({ setOpenAddFriendPopup }: AddFriendPopupProps) => {
           Add Friend
         </h2>
 
-        {activeUserIds.length > 0 ? (
+        {activeUsers.length > 0 ? (
           <ul className="flex-1 overflow-auto space-y-3">
-            {activeUserIds.map((userId) => (
+            {activeUsers.map((user: UserInterface) => (
               <li
-                key={userId}
+                key={user.userid}
                 className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2"
               >
                 <span className="text-gray-800 dark:text-gray-100">
-                  {userId}
+                  {user.username}
                 </span>
                 <Button
                   size="sm"
