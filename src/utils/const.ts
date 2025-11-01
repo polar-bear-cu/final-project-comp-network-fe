@@ -1,5 +1,5 @@
 export const JWT = "JWT";
-const SERVER_IP = "172.20.10.3";
+const SERVER_IP = "172.20.10.9";
 // YuTThaNa's Hotspot and YuTThaNa's Device as a server
 
 const BASE_URL = `http://${SERVER_IP}:3000`;

@@ -3,3 +3,8 @@ export interface UserInterface {
   username: string;
   friendList: UserInterface[];
 }
+
+export interface ActiveUser {
+  userid: string;
+  username: string;
+}

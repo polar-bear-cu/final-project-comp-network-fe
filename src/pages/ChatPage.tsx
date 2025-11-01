@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/context/userContext";
-import type { UserInterface } from "@/interface/user";
+import type { ActiveUser, UserInterface } from "@/interface/user";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { ChevronLeft, Moon, Sun } from "lucide-react";
@@ -31,6 +31,19 @@ const ChatPage = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [isOpenRightPanelInTablet, setOpenRightPanelInTablet] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.emit("get-active-users");
+    socket.on("active-users", (users: ActiveUser[]) => {
+      setOnlineUsers(users.map((user) => user.userid));
+    });
+
+    return () => {
+      socket.off("active-users");
+    };
+  }, [socket]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -192,17 +205,21 @@ const ChatPage = () => {
           </h2>
 
           <ul className="flex-1 overflow-y-auto space-y-2">
-            {chatUsers.map((chatUser: ChatUserInterface) => (
-              <ChatUserContainer
-                key={chatUser.id}
-                user={chatUser}
-                onClick={() => {
-                  setActiveChatId(chatUser.id);
-                  if (window.innerWidth < 768) setOpenRightPanelInTablet(true);
-                }}
-                isActive={chatUser.id === activeChatId}
-              />
-            ))}
+            <ul className="flex-1 overflow-y-auto space-y-2">
+              {chatUsers.map((chatUser: ChatUserInterface) => (
+                <ChatUserContainer
+                  key={chatUser.id}
+                  user={chatUser}
+                  onClick={() => {
+                    setActiveChatId(chatUser.id);
+                    if (window.innerWidth < 768)
+                      setOpenRightPanelInTablet(true);
+                  }}
+                  isActive={chatUser.id === activeChatId}
+                  isOnline={onlineUsers.includes(chatUser.id)}
+                />
+              ))}
+            </ul>
           </ul>
 
           <div className="w-full h-20 bg-card text-primary dark:text-white p-3 shadow-md z-10 relative flex justify-between gap-4">

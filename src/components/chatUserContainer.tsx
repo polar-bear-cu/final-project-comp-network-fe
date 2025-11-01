@@ -1,5 +1,4 @@
 import { UserCircle } from "lucide-react";
-import { useState } from "react";
 
 export interface ChatUserInterface {
   id: string;
@@ -8,16 +7,17 @@ export interface ChatUserInterface {
 
 interface ChatContainerProps {
   user: ChatUserInterface;
-  onClick?: () => void;
+  onClick: () => void;
   isActive?: boolean;
+  isOnline: boolean;
 }
 
 const ChatUserContainer = ({
   user,
   onClick,
   isActive = false,
+  isOnline,
 }: ChatContainerProps) => {
-  const [isOnline, setOnline] = useState(true);
   return (
     <div
       key={user.id}
