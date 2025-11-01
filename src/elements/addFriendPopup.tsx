@@ -1,6 +1,6 @@
 import { useSocket } from "@/context/socketContext";
 import { useUser } from "@/context/userContext";
-import { X, UserPlus, Check, User } from "lucide-react";
+import { X, UserPlus, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { UserInterface } from "@/interface/user";

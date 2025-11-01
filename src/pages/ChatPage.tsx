@@ -3,7 +3,7 @@ import { useUser } from "@/context/userContext";
 import type { UserInterface } from "@/interface/user";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { Moon, Sun, X } from "lucide-react";
+import { ChevronLeft, Moon, Sun } from "lucide-react";
 import ChatUserContainer, {
   type ChatUserInterface,
 } from "@/components/chatUserContainer";
@@ -251,8 +251,7 @@ const ChatPage = () => {
         >
           {activeUser ? (
             <>
-              <div className="sticky top-0 bg-card text-primary dark:text-white text-2xl font-bold p-3 z-20 mb-2 flex justify-between items-center">
-                <span>{activeUser.username}</span>
+              <div className="sticky top-0 bg-card text-primary dark:text-white text-2xl font-bold p-3 z-20 mb-2 flex items-center">
                 <button
                   className="md:hidden p-2 rounded-full hover:bg-muted transition"
                   onClick={() => {
@@ -260,8 +259,9 @@ const ChatPage = () => {
                     setActiveChatId("");
                   }}
                 >
-                  <X size={22} />
+                  <ChevronLeft size={22} />
                 </button>
+                <span>{activeUser.username}</span>
               </div>
 
               {chatMessages.length > 0 ? (
