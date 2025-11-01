@@ -8,15 +8,17 @@ import type { UserInterface } from "@/interface/user";
 interface AddFriendPopupProps {
   setOpenAddFriendPopup: (bool: boolean) => void;
   handleAddFriend: (friendid: string) => void;
+  activeUsers: string[];
 }
 
 const AddFriendPopup = ({
   setOpenAddFriendPopup,
   handleAddFriend,
+  activeUsers,
 }: AddFriendPopupProps) => {
   const { user } = useUser();
   const { socket } = useSocket();
-  const [activeUsers, setActiveUsers] = useState<UserInterface[]>([]);
+  const [potentialFriends, setPotentialFriends] = useState<UserInterface[]>([]);
   const [addedFriends, setAddedFriends] = useState<string[]>([]);
 
   useEffect(() => {
@@ -27,20 +29,18 @@ const AddFriendPopup = ({
     socket.on("active-users", (users: UserInterface[]) => {
       const friendIds = user.friendList.map((f: UserInterface) => f.userid);
       const filteredUsers = users.filter(
-        (u) => u.userid !== user.userid && !friendIds.includes(u.userid)
+        (u) =>
+          u.userid !== user.userid &&
+          !friendIds.includes(u.userid) &&
+          activeUsers.includes(u.userid)
       );
-      setActiveUsers(filteredUsers);
+      setPotentialFriends(filteredUsers);
     });
 
     return () => {
       socket.off("active-users");
     };
-  }, [socket, user]);
-
-  const handleAddFriendClick = (friendid: string) => {
-    handleAddFriend(friendid);
-    setAddedFriends((prev) => [...prev, friendid]);
-  };
+  }, [socket, user, activeUsers]);
 
   return (
     <div
@@ -62,42 +62,36 @@ const AddFriendPopup = ({
           Add Friend
         </h2>
 
-        {activeUsers.length > 0 ? (
-          <ul className="flex-1 overflow-auto space-y-3">
-            {activeUsers.map((u) => {
-              const isAdded = addedFriends.includes(u.userid);
-              return (
-                <li
-                  key={u.userid}
-                  className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2"
-                >
-                  <span className="text-gray-800 dark:text-gray-100">
-                    {u.username}
-                  </span>
-                  <Button
-                    size="sm"
-                    className="cursor-pointer flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed"
-                    onClick={() => handleAddFriendClick(u.userid)}
-                    disabled={isAdded}
-                  >
-                    {isAdded ? (
-                      <>
-                        <Check size={16} />
-                        Added
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus size={16} />
-                        Add
-                      </>
-                    )}
-                  </Button>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <p className="text-gray-600 dark:text-gray-300">No active users...</p>
+        {potentialFriends.map((potentialFriend) => (
+          <div
+            key={potentialFriend.userid}
+            className="flex items-center justify-between p-2 rounded hover:bg-accent"
+          >
+            <span className="flex items-center gap-2">
+              {potentialFriend.username}
+              <div className="w-2 h-2 rounded-full bg-green-500" />{" "}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                handleAddFriend(potentialFriend.userid);
+                setAddedFriends([...addedFriends, potentialFriend.userid]);
+              }}
+              disabled={addedFriends.includes(potentialFriend.userid)}
+            >
+              {addedFriends.includes(potentialFriend.userid) ? (
+                <Check className="h-5 w-5" />
+              ) : (
+                <UserPlus className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
+        ))}
+        {potentialFriends.length === 0 && (
+          <p className="text-center text-muted-foreground">
+            No users available to add
+          </p>
         )}
       </div>
     </div>

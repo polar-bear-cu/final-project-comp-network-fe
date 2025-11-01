@@ -7,7 +7,7 @@ export interface ChatUserInterface {
 
 interface ChatContainerProps {
   user: ChatUserInterface;
-  onClick: () => void;
+  onClick?: () => void;
   isActive?: boolean;
   isOnline: boolean;
 }

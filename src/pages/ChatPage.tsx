@@ -31,19 +31,49 @@ const ChatPage = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [isOpenRightPanelInTablet, setOpenRightPanelInTablet] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 
+  const [activeUsers, setActiveUsers] = useState<string[]>([]);
+  const [onlineFriends, setOnlineFriends] = useState<string[]>([]);
+
+  // useEffect for active users
   useEffect(() => {
     if (!socket) return;
+
     socket.emit("get-active-users");
     socket.on("active-users", (users: ActiveUser[]) => {
-      setOnlineUsers(users.map((user) => user.userid));
+      setActiveUsers(users.map((user) => user.userid));
     });
 
     return () => {
       socket.off("active-users");
     };
   }, [socket]);
+
+  // useEffect for online friends status
+  useEffect(() => {
+    if (!socket || !user || !user.friendList) return;
+
+    const friendIds = user.friendList.map((f: UserInterface) => f.userid);
+    socket.emit("get-online-friends", friendIds);
+
+    socket.on("online-friends", (onlineIds: string[]) => {
+      setOnlineFriends(onlineIds);
+    });
+
+    socket.on("user-offline", (userId: string) => {
+      setOnlineFriends((prev) => prev.filter((id) => id !== userId));
+    });
+
+    const intervalId = setInterval(() => {
+      socket.emit("get-online-friends", friendIds);
+    }, 10000);
+
+    return () => {
+      socket.off("online-friends");
+      socket.off("user-offline");
+      clearInterval(intervalId);
+    };
+  }, [socket, user]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -216,7 +246,7 @@ const ChatPage = () => {
                       setOpenRightPanelInTablet(true);
                   }}
                   isActive={chatUser.id === activeChatId}
-                  isOnline={onlineUsers.includes(chatUser.id)}
+                  isOnline={onlineFriends.includes(chatUser.id)}
                 />
               ))}
             </ul>
@@ -345,6 +375,7 @@ const ChatPage = () => {
         <AddFriendPopup
           setOpenAddFriendPopup={setOpenAddFriendPopup}
           handleAddFriend={handleAddFriend}
+          activeUsers={activeUsers}
         />
       )}
     </>
